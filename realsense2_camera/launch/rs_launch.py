@@ -89,27 +89,49 @@ def declare_configurable_parameters(parameters):
 def set_configurable_parameters(parameters):
     return dict([(param['name'], LaunchConfiguration(param['name'])) for param in parameters])
 
+def update_configurable_paramters_with_params_from_yaml_file(parameters, params_from_file):
+    for param in parameters:
+        if param['name'] in params_from_file:
+            param['default'] = str(params_from_file[param['name']])
+    return
+
 def yaml_to_dict(path_to_yaml):
     with open(path_to_yaml, "r") as f:
         return yaml.load(f, Loader=yaml.SafeLoader)
 
 def launch_setup(context, params, param_name_suffix=''):
-    _config_file = LaunchConfiguration('config_file' + param_name_suffix).perform(context)
-    params_from_file = {} if _config_file == "''" else yaml_to_dict(_config_file)
+    # Realsense
     return [
         launch_ros.actions.Node(
-            package='realsense2_camera',
-            namespace=LaunchConfiguration('camera_namespace' + param_name_suffix),
-            name=LaunchConfiguration('camera_name' + param_name_suffix),
-            executable='realsense2_camera_node',
-            parameters=[params, params_from_file],
-            output=LaunchConfiguration('output' + param_name_suffix),
-            arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level' + param_name_suffix)],
-            emulate_tty=True,
+            package     = 'realsense2_camera',
+            namespace   = params['camera_namespace'],
+            name        = params['camera_name'],
+            executable  = 'realsense2_camera_node',
+            parameters  = [params],
+            output      = params['output'],
+            arguments   = ['--ros-args', '--log-level', params['log_level']],
+            emulate_tty = True,
             )
     ]
 
+def declare_config_file_launch_argument(param_name_suffix= ''):
+    for param in configurable_parameters:
+        if param['name'] == 'config_file' + param_name_suffix:
+            return DeclareLaunchArgument(param['name'], default_value=param['default'], description=param['description']) 
+
+
+def declare_launch_arguments(context, param_name_suffix=''):
+    _config_file = LaunchConfiguration('config_file' + param_name_suffix).perform(context)
+    params_from_file = {} if _config_file == "''" else yaml_to_dict(_config_file)
+
+    update_configurable_paramters_with_params_from_yaml_file(configurable_parameters, params_from_file)
+
+    return declare_configurable_parameters(configurable_parameters)
+
 def generate_launch_description():
-    return LaunchDescription(declare_configurable_parameters(configurable_parameters) + [
-        OpaqueFunction(function=launch_setup, kwargs = {'params' : set_configurable_parameters(configurable_parameters)})
+    return LaunchDescription([
+            declare_config_file_launch_argument()] + [
+            OpaqueFunction(function=declare_launch_arguments)] + [
+            OpaqueFunction(function=launch_setup, 
+                           kwargs = {'params' : set_configurable_parameters(configurable_parameters)})
     ])
