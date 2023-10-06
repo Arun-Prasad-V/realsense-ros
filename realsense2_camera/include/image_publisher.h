@@ -19,6 +19,8 @@
 
 #include <image_transport/image_transport.hpp>
 
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
+
 namespace realsense2_camera {
 class image_publisher
 {
@@ -32,7 +34,7 @@ public:
 class image_rcl_publisher : public image_publisher
 {
 public:
-    image_rcl_publisher( rclcpp::Node & node,
+    image_rcl_publisher( rclcpp_lifecycle::LifecycleNode & node,
                          const std::string & topic_name,
                          const rmw_qos_profile_t & qos );
     void publish( sensor_msgs::msg::Image::UniquePtr image_ptr ) override;
@@ -46,7 +48,7 @@ private:
 class image_transport_publisher : public image_publisher
 {
 public:
-    image_transport_publisher( rclcpp::Node & node,
+    image_transport_publisher( rclcpp_lifecycle::LifecycleNode & node,
                                const std::string & topic_name,
                                const rmw_qos_profile_t & qos );
     void publish( sensor_msgs::msg::Image::UniquePtr image_ptr ) override;

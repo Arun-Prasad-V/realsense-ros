@@ -49,6 +49,9 @@
 #include <ros_sensor.h>
 #include <named_filter.h>
 
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "rclcpp/rclcpp.hpp"
+
 #include <queue>
 #include <mutex>
 #include <atomic>
@@ -106,12 +109,16 @@ namespace realsense2_camera
     class BaseRealSenseNode
     {
     public:
-        BaseRealSenseNode(rclcpp::Node& node,
+        BaseRealSenseNode(rclcpp_lifecycle::LifecycleNode& node,
                           rs2::device dev,
                           std::shared_ptr<Parameters> parameters,
                           bool use_intra_process = false);
         ~BaseRealSenseNode();
         void publishTopics();
+        void activate()
+        {
+            _metadata_publishers[COLOR]->on_activate();
+        }
 
     public:
         enum class imu_sync_method{NONE, COPY, LINEAR_INTERPOLATION};
@@ -141,7 +148,7 @@ namespace realsense2_camera
 
         std::string _base_frame_id;
         bool _is_running;
-        rclcpp::Node& _node;
+        rclcpp_lifecycle::LifecycleNode& _node;
         std::string _camera_name;
         std::vector<rs2_option> _monitor_options;
         rclcpp::Logger _logger;
@@ -293,7 +300,7 @@ namespace realsense2_camera
         std::map<stream_index_pair, rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr> _imu_publishers;
         std::shared_ptr<SyncedImuPublisher> _synced_imu_publisher;
         std::map<stream_index_pair, rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr> _info_publishers;
-        std::map<stream_index_pair, rclcpp::Publisher<realsense2_camera_msgs::msg::Metadata>::SharedPtr> _metadata_publishers;
+        std::map<stream_index_pair, rclcpp_lifecycle::LifecyclePublisher<realsense2_camera_msgs::msg::Metadata>::SharedPtr> _metadata_publishers;
         std::map<stream_index_pair, rclcpp::Publisher<IMUInfo>::SharedPtr> _imu_info_publishers;
         std::map<stream_index_pair, rclcpp::Publisher<Extrinsics>::SharedPtr> _extrinsics_publishers;
         rclcpp::Publisher<realsense2_camera_msgs::msg::RGBD>::SharedPtr _rgbd_publisher;

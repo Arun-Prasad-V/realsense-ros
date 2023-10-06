@@ -115,6 +115,8 @@ find_package(nav_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(diagnostic_updater REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(lifecycle_msgs REQUIRED)
 
 find_package(realsense2 2.54.1)
 if(NOT realsense2_FOUND)
@@ -217,6 +219,8 @@ set(dependencies
   realsense2
   tf2_ros
   diagnostic_updater
+  rclcpp_lifecycle
+  lifecycle_msgs
 )
 
 ament_target_dependencies(${PROJECT_NAME}

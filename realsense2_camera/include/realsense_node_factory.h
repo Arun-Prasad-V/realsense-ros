@@ -32,9 +32,11 @@
 #include <vector>
 #include <thread>
 
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
+
 namespace realsense2_camera
 {
-    class RealSenseNodeFactory : public rclcpp::Node
+    class RealSenseNodeFactory : public rclcpp_lifecycle::LifecycleNode
     {
     public:
         explicit RealSenseNodeFactory(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
@@ -42,6 +44,22 @@ namespace realsense2_camera
             const std::string & node_name, const std::string & ns,
             const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
         virtual ~RealSenseNodeFactory();
+
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+        on_configure(const rclcpp_lifecycle::State &)
+        {
+            ROS_INFO_STREAM("on_configure() called...");
+            return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+        }
+
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+        on_activate(const rclcpp_lifecycle::State &)
+        { 
+            _realSenseNode->activate();
+            ROS_INFO_STREAM("on_activate() called...");
+
+            return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+        }
 
     private:
         void init();
@@ -52,7 +70,7 @@ namespace realsense2_camera
         void tryGetLogSeverity(rs2_log_severity& severity) const;
         static std::string parseUsbPort(std::string line);
 
-        rclcpp::Node::SharedPtr _node;
+        rclcpp_lifecycle::LifecycleNode::SharedPtr _node;
         rs2::device _device;
         std::unique_ptr<BaseRealSenseNode> _realSenseNode;
         rs2::context _ctx;
