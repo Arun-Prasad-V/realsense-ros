@@ -23,6 +23,7 @@
 // Header files for disabling intra-process comms for static broadcaster.
 #include <rclcpp/publisher_options.hpp>
 #include <tf2_ros/qos.hpp>
+#include "/opt/intel/oneapi/vtune/2024.0/sdk/include/ittnotify.h"
 
 using namespace realsense2_camera;
 
@@ -247,7 +248,7 @@ void BaseRealSenseNode::setupFilters()
     _filters.push_back(_colorizer_filter);
     _filters.push_back(_pc_filter);
 
-    _align_depth_filter = std::make_shared<AlignDepthFilter>(std::make_shared<rs2::align>(RS2_STREAM_COLOR), update_align_depth_func, _parameters, _logger);
+    _align_depth_filter = std::make_shared<AlignDepthFilter>(std::make_shared<rs2::gl::align>(RS2_STREAM_COLOR), update_align_depth_func, _parameters, _logger);
     _filters.push_back(_align_depth_filter);
 }
 
@@ -549,9 +550,19 @@ void BaseRealSenseNode::frame_callback(rs2::frame frame)
         rs2::video_frame original_color_frame = frameset.get_color_frame();
 
         ROS_DEBUG("num_filters: %d", static_cast<int>(_filters.size()));
+        __itt_domain* domain = __itt_domain_create("MyDomain");
+
         for (auto filter_it : _filters)
         {
+            char temp_name[15];
+            std::strcpy(temp_name, filter_it->_name.c_str()); 
+            //ROS_INFO_STREAM("filter naem: " << temp_name);
+            __itt_string_handle* task = __itt_string_handle_create(temp_name);
+            __itt_task_begin(domain, __itt_null, __itt_null, task);
+
             frameset = filter_it->Process(frameset);
+
+            __itt_task_end(domain);
         }
 
         ROS_DEBUG("List of frameset after applying filters: size: %d", static_cast<int>(frameset.size()));

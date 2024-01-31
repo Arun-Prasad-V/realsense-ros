@@ -19,8 +19,8 @@
 
 using namespace realsense2_camera;
 
-NamedFilter::NamedFilter(std::shared_ptr<rs2::filter> filter, std::shared_ptr<Parameters> parameters, rclcpp::Logger logger, bool is_enabled, bool is_set_parameters):
-    _filter(filter), _is_enabled(is_enabled), _params(parameters, logger), _logger(logger)
+NamedFilter::NamedFilter(std::shared_ptr<rs2::filter> filter, std::shared_ptr<Parameters> parameters, rclcpp::Logger logger, std::string name, bool is_enabled, bool is_set_parameters):
+    _filter(filter), _name(name), _is_enabled(is_enabled), _params(parameters, logger), _logger(logger)
 {
     if (is_set_parameters)
         setParameters();
@@ -74,11 +74,12 @@ rs2::frame NamedFilter::Process(rs2::frame frame)
 
 
 PointcloudFilter::PointcloudFilter(std::shared_ptr<rs2::filter> filter, rclcpp::Node& node, std::shared_ptr<Parameters> parameters, rclcpp::Logger logger, bool is_enabled):
-    NamedFilter(filter, parameters, logger, is_enabled, false),
+    NamedFilter(filter, parameters, logger, "pointcloud", is_enabled, false),
     _node(node),
     _allow_no_texture_points(ALLOW_NO_TEXTURE_POINTS),
     _ordered_pc(ORDERED_PC)
     {
+        //_name = "pointcloud";
         setParameters();
     }
 
@@ -292,8 +293,9 @@ void PointcloudFilter::Publish(rs2::points pc, const rclcpp::Time& t, const rs2:
 AlignDepthFilter::AlignDepthFilter(std::shared_ptr<rs2::filter> filter,
     std::function<void(const rclcpp::Parameter&)> update_align_depth_func,
     std::shared_ptr<Parameters> parameters, rclcpp::Logger logger, bool is_enabled):
-    NamedFilter(filter, parameters, logger, is_enabled, false)
+    NamedFilter(filter, parameters, logger, "align_depth", is_enabled, false)
 {
+     //_name = "align_depth";
     _params.registerDynamicOptions(*(_filter.get()), "align_depth");
     _params.getParameters()->setParamT("align_depth.enable", _is_enabled, update_align_depth_func);
     _parameters_names.push_back("align_depth.enable");

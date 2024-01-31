@@ -220,6 +220,8 @@ else()
   set(link_libraries ${realsense2_LIBRARY})
 endif()
 
+list(APPEND link_libraries /opt/intel/oneapi/vtune/2024.0/sdk/lib64/libittnotify.a)
+
 target_link_libraries(${PROJECT_NAME}
     ${link_libraries}
 )
