@@ -32,12 +32,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ros_distro: [iron, humble]
+        ros_distro: [iron, humble, jazzy]
         include:
         - ros_distro: 'iron'
           os: ubuntu-22.04
         - ros_distro: 'humble'
           os: ubuntu-22.04
+        - ros_distro: 'jazzy'
+          os: ubuntu-24.04
           
     env:
       ROS_DISTRO: ${{ matrix.ros_distro }}
